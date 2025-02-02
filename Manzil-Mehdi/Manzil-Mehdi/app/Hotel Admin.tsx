@@ -5,8 +5,8 @@ import { useLocalSearchParams } from 'expo-router';
 import io from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Ionicons'; // For icons
 import { BarChart } from 'react-native-chart-kit';
-import EditRoomInfo from './editroominfo';
-import ReservationRequests from './components/ReservationsRequest';
+import EditRoomInfo from './Edit_Room_Info';
+import ReservationRequests from './ReservationsRequest';
 
 let socket;
 
