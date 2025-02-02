@@ -141,7 +141,7 @@ const getStatusColor = (status: string) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: "#f4f7fc" },
-    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingTop: '25%' },
     headerText: { fontSize: 22, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
 
     row: { justifyContent: "space-between" },

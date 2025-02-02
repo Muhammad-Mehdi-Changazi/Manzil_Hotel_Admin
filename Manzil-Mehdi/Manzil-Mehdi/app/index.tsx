@@ -11,10 +11,6 @@ export default function Index() {
     router.push({ pathname: '/Login' }); // Navigate to LoginScreen
   };
 
-  const handleSignup = () => {
-    router.push({ pathname: '/SignupScreen' }); // Navigate to SignupScreen
-  };
-
   return (
     <ImageBackground
       source={require('../assets/images/BackGroundImageHomeScreen.jpg')}
@@ -27,9 +23,6 @@ export default function Index() {
         <View style={styles.buttonsContainer}>
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleSignup}>
-            <Text style={styles.buttonText}>Sign Up as Customer</Text>
           </TouchableOpacity>
         </View>
       </View>
