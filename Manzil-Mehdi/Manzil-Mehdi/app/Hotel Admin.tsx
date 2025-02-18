@@ -56,9 +56,9 @@ function HotelAdmin() {
     const roomsOccupied = rooms.filter(room => !room.available).length;
     const roomsAvailable = totalRooms - roomsOccupied;  // or filter for 'available'
     // Dummy Data for Reservations
-    const [CurrentReservationRequests, setCurrentReservationRequests] = useState<number>(5);
-    const [OngoingReservations, setOngoingReservations] = useState<number>(15);
-    const [pastReservation, setPastReservations] = useState<number>(10);
+    const [CurrentReservationRequests, setCurrentReservationRequests] = useState<number>(0);
+    const [OngoingReservations, setOngoingReservations] = useState<number>(0);
+    const [pastReservation, setPastReservations] = useState<number>(0);
     const [modalVisible, setModalVisible] = useState(false); // For controlling modal visibility
 
 
@@ -186,7 +186,7 @@ function HotelAdmin() {
                 prevRooms.map((room) => (room._id === updatedRoom._id ? updatedRoom : room))
             );
         });
-    }, [hotel_id]);
+    }, [hotel_id, selectedTab]);
 
     useEffect(() => {
         const onChange = () => setWindowWidth(Dimensions.get('window').width);
