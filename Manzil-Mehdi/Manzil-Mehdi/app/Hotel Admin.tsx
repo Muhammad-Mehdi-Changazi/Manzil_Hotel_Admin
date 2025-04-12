@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, FlatList, Modal } from 'react-native';
 import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
@@ -7,6 +7,10 @@ import Icon from 'react-native-vector-icons/Ionicons'; // For icons
 import { BarChart } from 'react-native-chart-kit';
 import EditRoomInfo from './Edit_Room_Info';
 import ReservationRequests from './ReservationsRequest';
+import EditAccount from './EditAccInfo';
+import { Audio } from 'expo-av';
+
+
 
 let socket;
 
@@ -60,6 +64,11 @@ function HotelAdmin() {
     const [OngoingReservations, setOngoingReservations] = useState<number>(0);
     const [pastReservation, setPastReservations] = useState<number>(0);
     const [modalVisible, setModalVisible] = useState(false); // For controlling modal visibility
+    const [alarmSound, setAlarmSound] = useState<Audio.Sound | null>(null);
+    const [isAlarmPlaying, setIsAlarmPlaying] = useState(false);
+    const alarmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [isAlarmMuted, setIsAlarmMuted] = useState(false);
+
 
 
     const handleRoomClick = (room) => {
@@ -83,14 +92,33 @@ function HotelAdmin() {
 
     useEffect(() => {
         // Connect to Socket.IO server
-        socket = io('http://34.226.13.20:3000');
+        socket = io('http://10.130.114.185:3000');
 
         socket.on('connect', () => console.log('Connection to Socket.IO server'));
-        socket.on('reservation-created', (data: { placeID: string, reservationDetails: any }) => {
+        socket.on('reservation-created', async (data: { placeID: string, reservationDetails: any }) => {
+            console.log("Reservation Created Update:", data);
             if (data.placeID === hotel_id) {
-            setCurrentReservationRequests((prevCount: number) => prevCount + 1);  // Update based on your logic
+                setCurrentReservationRequests((prevCount: number) => prevCount + 1);
+
+                // Only play alarm if not muted
+                if (!isAlarmPlaying && !isAlarmMuted) {
+                    const { sound } = await Audio.Sound.createAsync(
+                        require('./../assets/alarm.mp3')
+                    );
+                    setAlarmSound(sound);
+                    setIsAlarmPlaying(true);
+                    await sound.playAsync();
+
+                    // Stop alarm after 10 seconds
+                    alarmTimeoutRef.current = setTimeout(async () => {
+                        await sound.stopAsync();
+                        setIsAlarmPlaying(false);
+                    }, 10000);
+                }
             }
         });
+
+
 
         socket.on("room_reserved", (data: { room: RoomDetails }) => {
             console.log("Room Reserved Update:", data);
@@ -130,12 +158,24 @@ function HotelAdmin() {
     }, [hotel_id]);
 
     useEffect(() => {
+        return () => {
+            if (alarmSound) {
+                alarmSound.unloadAsync();
+            }
+            if (alarmTimeoutRef.current) {
+                clearTimeout(alarmTimeoutRef.current);
+            }
+        };
+    }, []);
+
+
+    useEffect(() => {
         const fetchHotelData = async () => {
             try {
-                const hotelResponse: { data: { hotel: HotelDetails } } = await axios.get(`http://34.226.13.20:3000/hotels/${hotel_id}`);
+                const hotelResponse: { data: { hotel: HotelDetails } } = await axios.get(`http://10.130.114.185:3000/hotels/${hotel_id}`);
                 setHotelDetails(hotelResponse.data.hotel);
 
-                const roomsResponse = await axios.get(`http://34.226.13.20:3000/${hotel_id}/rooms`);
+                const roomsResponse = await axios.get(`http://10.130.114.185:3000/${hotel_id}/rooms`);
 
                 // Ensure uniqueness before updating the state
                 setRooms(roomsResponse.data.rooms);
@@ -149,7 +189,7 @@ function HotelAdmin() {
         const fetchReservations = async () => {
             try {
                 // Fetch all reservations with hotel_id and status filtering
-                const response = await axios.get(`http://34.226.13.20:3000/GetAllReservationsByHotelID?hotel_id=${hotel_id}`);
+                const response = await axios.get(`http://10.130.114.185:3000/GetAllReservationsByHotelID?hotel_id=${hotel_id}`);
 
                 // Store the fetched data
                 const allReservations = response.data;
@@ -289,21 +329,20 @@ function HotelAdmin() {
                     </View>
                 );
             case "Staff Info":
+                 return (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionHeader}>{activeScreen}</Text>
+                        <Text style={styles.text}>Coming soon...</Text>
+                    </View>
+                );
             case "Ongoing Reservations":
                 return <ReservationRequests status="CONFIRMED" hotel_id={hotel_id} />;
             case "Reservation History":
                 return <ReservationRequests status={["CANCELLED", "COMPLETED"]} hotel_id={hotel_id} />;
             case "Reservation Requests":
                 return <ReservationRequests status="PENDING" hotel_id={hotel_id} />;
-            case "Edit Account":
-            case "Logout":
-                return (
-                    <View style={styles.section}>
-                        <Text style={styles.sectionHeader}>{activeScreen}</Text>
-                        <Text style={styles.text}>Coming soon...</Text>
-                    </View>
-                );
-
+            case "Edit Details":
+                return <EditAccount hotel_id={hotel_id}/>;
 
             case "Edit Room Info":
                 return <EditRoomInfo hotel_id={hotel_id} />;
@@ -388,9 +427,33 @@ function HotelAdmin() {
                 <Icon style={{ alignSelf: "flex-start", paddingTop: 10 }} name="person-circle" size={50} color="white" />
                 <Text style={styles.sidebarHeaderText}>Hotel Admin Panel</Text>
                 <Text style={styles.headerText}>Welcome, {username}</Text>
-                <TouchableOpacity style={styles.notificationIcon}>
-                    <Icon name="notifications" size={35} color="white" />
+                <TouchableOpacity
+                    style={styles.notificationIcon}
+                    onPress={() => {
+                        // Toggle mute state
+                        setIsAlarmMuted((prev) => !prev);
+
+                        // Stop the alarm if it's playing
+                        if (alarmSound && isAlarmPlaying) {
+                            alarmSound.stopAsync();
+                            setIsAlarmPlaying(false);
+                        }
+
+                        // Clear the alarm timeout if active
+                        if (alarmTimeoutRef.current) {
+                            clearTimeout(alarmTimeoutRef.current);
+                            alarmTimeoutRef.current = null;
+                        }
+                    }}
+                >
+                    <Icon
+                        name={isAlarmMuted ? "notifications-off" : "notifications"}
+                        size={35}
+                        color="white"
+                    />
                 </TouchableOpacity>
+
+
             </View>
             {/* Hamburger icon for small screens */}
             {windowWidth <= 768 && !isSidebarOpen && (
@@ -435,11 +498,18 @@ function HotelAdmin() {
                         Staff Info
                     </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.menuButton, selectedTab === "Edit Details" && styles.selectedTab]}
+                    onPress={() => handleTabSelect("Edit Details")}
+                >
+                    <Text style={[styles.menuText, selectedTab === "Edit Details" && styles.selectedMenuText]}>
+                        Edit Details
+                    </Text>
+                </TouchableOpacity>
 
                 {[
                     { title: "Rooms", subItems: ["Room Information", "Edit Room Info"] },
                     { title: "Reservations", subItems: ["Ongoing Reservations", "Reservation History", "Reservation Requests"] },
-                    { title: "Account Settings", subItems: ["Edit Account", "Logout"] }
                 ].map((menu) => (
                     <View key={menu.title}>
                         <TouchableOpacity

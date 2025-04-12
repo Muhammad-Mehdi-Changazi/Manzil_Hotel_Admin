@@ -2,7 +2,6 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { AuthProvider } from './contexts/authcontext';  // Adjusted path
-import Header from './components/Header';  // Adjusted path
 import { MenuProvider } from 'react-native-popup-menu';
 
 export default function RootLayout() {

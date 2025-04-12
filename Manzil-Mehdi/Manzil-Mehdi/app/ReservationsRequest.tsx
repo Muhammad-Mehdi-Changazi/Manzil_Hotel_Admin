@@ -12,6 +12,12 @@ interface Reservation {
     email: string;
     reservation_date: { from: string; to: string };
     reservationStatus: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+    roomDetails: {
+        room_type: string;
+        room_number: string;
+        rent: number;
+        bed_size: string;
+    }
 }
 
 interface ReservationRequestsProps {
@@ -25,7 +31,7 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        socket = io('http://34.226.13.20:3000');
+        socket = io('http://10.130.114.185:3000');
 
         socket.on('connect', () => console.log('Connected to Socket.IO server'));
         socket.on('reservation-created', (data: { placeID: string, reservationDetails: any }) => {
@@ -44,8 +50,9 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
         const fetchReservations = async () => {
             try {
                 const statusQuery = Array.isArray(status) ? status.join(",") : status;
-                const response = await axios.get(`http://34.226.13.20:3000/GetReservations?status=${statusQuery}&hotel_id=${hotel_id}`);
+                const response = await axios.get(`http://10.130.114.185:3000/GetReservations?status=${statusQuery}&hotel_id=${hotel_id}`);
                 setReservations(response.data);
+                console.log("fetched reservations:", response.data);
             } catch (error) {
                 console.error("Error fetching reservations:", error);
                 setError("Failed to fetch reservations.");
@@ -57,14 +64,17 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
         fetchReservations();
     }, [status, hotel_id]);
 
+    // console.log("Reservations are:", reservations);
+
     const updateReservationStatus = async (id: string, newStatus: "CONFIRMED" | "CANCELLED") => {
         try {
-            await axios.put(`http://34.226.13.20:3000/UpdateReservationsStatus/${id}/updateStatus`, { status: newStatus });
+            await axios.put(`http://10.130.114.185:3000/UpdateReservationsStatus/${id}/updateStatus`, { status: newStatus });
             setReservations(reservations.map(res => res._id === id ? { ...res, reservationStatus: newStatus } : res));
         } catch (error) {
             console.error("Error updating reservation:", error);
         }
     };
+
 
     if (loading) {
         return (
@@ -103,7 +113,9 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
                         <Text style={styles.text}><Text style={styles.bold}>Email:</Text> {item.email}</Text>
                         <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(item.reservation_date.from).toDateString()}</Text>
                         <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(item.reservation_date.to).toDateString()}</Text>
-
+                        <Text style={styles.text}><Text style={styles.bold}>Room Type:</Text> {item.roomDetails.room_type}</Text>
+                        <Text style={styles.text}><Text style={styles.bold}>Room Number:</Text> {item.roomDetails.room_number}</Text>
+                        <Text style={styles.text}><Text style={styles.bold}>Rent:</Text> {item.roomDetails.rent}</Text>
                         {/* Status */}
                         <View style={[styles.statusContainer, { borderColor: getStatusColor(item.reservationStatus) }]}>
                             <Text style={[styles.statusText, { color: getStatusColor(item.reservationStatus) }]}>
