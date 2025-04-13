@@ -197,16 +197,28 @@ function HotelAdmin() {
 
 
                 // Count the length of each status category
-                const pendingCount: number = allReservations.filter((reservation: { reservationStatus: string }) => reservation.reservationStatus === "PENDING").length;
-                const confirmedCount: number = allReservations.filter((reservation: { reservationStatus: string }) => reservation.reservationStatus === "CONFIRMED").length;
-                const cancelledOrCompletedCount: number = allReservations.filter((reservation: { reservationStatus: string }) =>
-                    reservation.reservationStatus === "CANCELLED" || reservation.reservationStatus === "COMPLETED"
-                ).length;
+                            // Get current date
+            const now = new Date();
 
-                // Set the counts to state (assuming you have states for these)
-                setCurrentReservationRequests(pendingCount);
-                setOngoingReservations(confirmedCount);
-                setPastReservations(cancelledOrCompletedCount);
+            // Count the length of each status category
+            const pendingCount: number = allReservations.filter((reservation: { reservationStatus: string }) => 
+                reservation.reservationStatus === "PENDING"
+            ).length;
+
+            const confirmedFutureCount: number = allReservations.filter((reservation: { reservationStatus: string, reservation_date: { to: string } }) =>
+                reservation.reservationStatus === "CONFIRMED" &&
+                new Date(reservation.reservation_date.to) >= now
+            ).length;
+
+            const pastReservationsCount: number = allReservations.filter((reservation: { reservationStatus: string, reservation_date: { to: string } }) =>
+                reservation.reservationStatus === "CANCELLED" ||
+                (reservation.reservationStatus === "CONFIRMED" && new Date(reservation.reservation_date.to) < now)
+            ).length;
+
+            // Set the counts to state (assuming you have states for these)
+            setCurrentReservationRequests(pendingCount);
+            setOngoingReservations(confirmedFutureCount);
+            setPastReservations(pastReservationsCount);
 
                 // Stop loading
                 setLoading(false);
@@ -338,7 +350,7 @@ function HotelAdmin() {
             case "Ongoing Reservations":
                 return <ReservationRequests status="CONFIRMED" hotel_id={hotel_id} />;
             case "Reservation History":
-                return <ReservationRequests status={["CANCELLED", "COMPLETED"]} hotel_id={hotel_id} />;
+                return <ReservationRequests status={["CANCELLED", "CONFIRMED"]} hotel_id={hotel_id} />;
             case "Reservation Requests":
                 return <ReservationRequests status="PENDING" hotel_id={hotel_id} />;
             case "Edit Details":

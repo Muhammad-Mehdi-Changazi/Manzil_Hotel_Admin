@@ -30,39 +30,63 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        socket = io('http://10.130.114.185:3000');
+        useEffect(() => {
+            socket = io('http://10.130.114.185:3000');
 
-        socket.on('connect', () => console.log('Connected to Socket.IO server'));
-        socket.on('reservation-created', (data: { placeID: string, reservationDetails: any }) => {
-            console.log("Received reservation-created event:", data);
+            socket.on('connect', () => console.log('Connected to Socket.IO server'));
 
-            if (data.placeID === hotel_id && data.reservationDetails?._id) {
-                setReservations((prevReservations) =>
-                    prevReservations.some((res) => res._id === data.reservationDetails._id) ? prevReservations
-                        : [...prevReservations, data.reservationDetails]
-                );
-            }
-        });
+            socket.on('reservation-created', (data: { placeID: string, reservationDetails: any }) => {
+                if (data.placeID === hotel_id && data.reservationDetails?._id) {
+                    setReservations((prevReservations) =>
+                        prevReservations.some((res) => res._id === data.reservationDetails._id)
+                            ? prevReservations
+                            : [...prevReservations, data.reservationDetails]
+                    );
+                }
+            });
 
-        socket.on('disconnect', () => console.log('Disconnected from Socket.IO server'));
+            socket.on('disconnect', () => console.log('Disconnected from Socket.IO server'));
 
-        const fetchReservations = async () => {
-            try {
-                const statusQuery = Array.isArray(status) ? status.join(",") : status;
-                const response = await axios.get(`http://10.130.114.185:3000/GetReservations?status=${statusQuery}&hotel_id=${hotel_id}`);
-                setReservations(response.data);
-                console.log("fetched reservations:", response.data);
-            } catch (error) {
-                console.error("Error fetching reservations:", error);
-                setError("Failed to fetch reservations.");
-            } finally {
-                setLoading(false);
-            }
-        };
+            const fetchReservations = async () => {
+                try {
+                    const statusQuery = Array.isArray(status) ? status.join(",") : status;
+                    const response = await axios.get(`http://10.130.114.185:3000/GetReservations?status=${statusQuery}&hotel_id=${hotel_id}`);
+                    let allReservations = response.data;
 
-        fetchReservations();
-    }, [status, hotel_id]);
+                    const now = new Date();
+
+                    if (status === "CONFIRMED") {
+                        // Filter ongoing reservations
+                        allReservations = allReservations.filter((res: Reservation) =>
+                            res.reservationStatus === "CONFIRMED" &&
+                            new Date(res.reservation_date.to) > now
+                        );
+                    } else if (
+                        Array.isArray(status)
+                            ? status.some(s => ["CANCELLED", "CONFIRMED"].includes(s))
+                            : ["CANCELLED", "CONFIRMED"].includes(status)
+                    ) {
+                        // Filter history reservations
+                        allReservations = allReservations.filter((res: Reservation) =>
+                            res.reservationStatus === "CANCELLED" ||
+                            (res.reservationStatus === "CONFIRMED" &&
+                                new Date(res.reservation_date.to) <= now)
+                        );
+                    }
+
+                    setReservations(allReservations);
+                    console.log("Filtered reservations:", allReservations);
+                } catch (error) {
+                    console.error("Error fetching reservations:", error);
+                    setError("Failed to fetch reservations.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchReservations();
+        }, [status, hotel_id]);
+
 
     // console.log("Reservations are:", reservations);
 
@@ -97,7 +121,7 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
             <Text style={styles.headerText}>
                 {status === "PENDING" && "Reservation Requests"}
                 {status === "CONFIRMED" && "Ongoing Reservations"}
-                {(Array.isArray(status) ? status.some(s => ["CANCELLED", "COMPLETED"].includes(s)) : ["CANCELLED", "COMPLETED"].includes(status)) && "Reservation History"}
+                {(Array.isArray(status) ? status.some(s => ["CANCELLED", "CONFIRMED"].includes(s)) : ["CANCELLED", "CONFIRMED"].includes(status)) && "Reservation History"}
             </Text>
 
             <FlatList
@@ -113,9 +137,9 @@ export default function ReservationRequests({ status, hotel_id }: ReservationReq
                         <Text style={styles.text}><Text style={styles.bold}>Email:</Text> {item.email}</Text>
                         <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(item.reservation_date.from).toDateString()}</Text>
                         <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(item.reservation_date.to).toDateString()}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Room Type:</Text> {item.roomDetails.room_type}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Room Number:</Text> {item.roomDetails.room_number}</Text>
-                        <Text style={styles.text}><Text style={styles.bold}>Rent:</Text> {item.roomDetails.rent}</Text>
+                        <Text style={styles.text}><Text style={styles.bold}>Room Type:</Text> {item.roomDetails?.room_type}</Text>
+                        <Text style={styles.text}><Text style={styles.bold}>Room Number:</Text> {item.roomDetails?.room_number}</Text>
+                        <Text style={styles.text}><Text style={styles.bold}>Rent:</Text> {item.roomDetails?.rent}</Text>
                         {/* Status */}
                         <View style={[styles.statusContainer, { borderColor: getStatusColor(item.reservationStatus) }]}>
                             <Text style={[styles.statusText, { color: getStatusColor(item.reservationStatus) }]}>
