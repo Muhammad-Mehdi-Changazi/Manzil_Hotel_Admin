@@ -92,7 +92,7 @@ function HotelAdmin() {
 
     useEffect(() => {
         // Connect to Socket.IO server
-        socket = io('http://10.130.114.185:3000');
+        socket = io('http://34.226.13.20:3000');
 
         socket.on('connect', () => console.log('Connection to Socket.IO server'));
         socket.on('reservation-created', async (data: { placeID: string, reservationDetails: any }) => {
@@ -172,10 +172,10 @@ function HotelAdmin() {
     useEffect(() => {
         const fetchHotelData = async () => {
             try {
-                const hotelResponse: { data: { hotel: HotelDetails } } = await axios.get(`http://10.130.114.185:3000/hotels/${hotel_id}`);
+                const hotelResponse: { data: { hotel: HotelDetails } } = await axios.get(`http://34.226.13.20:3000/hotels/${hotel_id}`);
                 setHotelDetails(hotelResponse.data.hotel);
 
-                const roomsResponse = await axios.get(`http://10.130.114.185:3000/${hotel_id}/rooms`);
+                const roomsResponse = await axios.get(`http://34.226.13.20:3000/${hotel_id}/rooms`);
 
                 // Ensure uniqueness before updating the state
                 setRooms(roomsResponse.data.rooms);
@@ -189,7 +189,7 @@ function HotelAdmin() {
         const fetchReservations = async () => {
             try {
                 // Fetch all reservations with hotel_id and status filtering
-                const response = await axios.get(`http://10.130.114.185:3000/GetAllReservationsByHotelID?hotel_id=${hotel_id}`);
+                const response = await axios.get(`http://34.226.13.20:3000/GetAllReservationsByHotelID?hotel_id=${hotel_id}`);
 
                 // Store the fetched data
                 const allReservations = response.data;
@@ -438,7 +438,7 @@ function HotelAdmin() {
             <View style={styles.header}>
                 <Icon style={{ alignSelf: "flex-start", paddingTop: 10 }} name="person-circle" size={50} color="white" />
                 <Text style={styles.sidebarHeaderText}>Hotel Admin Panel</Text>
-                <Text style={styles.headerText}>{username}</Text>
+                <Text style={styles.headerText}>Welcome {username}</Text>
                 <TouchableOpacity
                     style={styles.notificationIcon}
                     onPress={() => {
