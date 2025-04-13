@@ -493,31 +493,7 @@ function HotelAdmin() {
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[styles.menuButton, selectedTab === "Offers" && styles.selectedTab]}
-                    onPress={() => handleTabSelect("Offers")}
-                >
-                    <Text style={[styles.menuText, selectedTab === "Offers" && styles.selectedMenuText]}>
-                        Offers
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.menuButton, selectedTab === "Staff Info" && styles.selectedTab]}
-                    onPress={() => handleTabSelect("Staff Info")}
-                >
-                    <Text style={[styles.menuText, selectedTab === "Staff Info" && styles.selectedMenuText]}>
-                        Staff Info
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.menuButton, selectedTab === "Edit Details" && styles.selectedTab]}
-                    onPress={() => handleTabSelect("Edit Details")}
-                >
-                    <Text style={[styles.menuText, selectedTab === "Edit Details" && styles.selectedMenuText]}>
-                        Edit Details
-                    </Text>
-                </TouchableOpacity>
+               
 
                 {[
                     { title: "Rooms", subItems: ["Room Information", "Edit Room Info"] },
@@ -548,6 +524,34 @@ function HotelAdmin() {
                             ))}
                     </View>
                 ))}
+
+                  <TouchableOpacity
+                    style={[styles.menuButton, selectedTab === "Edit Details" && styles.selectedTab]}
+                    onPress={() => handleTabSelect("Edit Details")}
+                >
+                    <Text style={[styles.menuText, selectedTab === "Edit Details" && styles.selectedMenuText]}>
+                        Edit Details
+                    </Text>
+                </TouchableOpacity>
+
+                 <TouchableOpacity
+                    style={[styles.menuButton, selectedTab === "Offers" && styles.selectedTab]}
+                    onPress={() => handleTabSelect("Offers")}
+                >
+                    <Text style={[styles.menuText, selectedTab === "Offers" && styles.selectedMenuText]}>
+                        Offers
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.menuButton, selectedTab === "Staff Info" && styles.selectedTab]}
+                    onPress={() => handleTabSelect("Staff Info")}
+                >
+                    <Text style={[styles.menuText, selectedTab === "Staff Info" && styles.selectedMenuText]}>
+                        Staff Info
+                    </Text>
+                </TouchableOpacity>
+              
 
             </View>
 
