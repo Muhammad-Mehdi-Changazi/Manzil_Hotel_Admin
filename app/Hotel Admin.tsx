@@ -438,7 +438,7 @@ function HotelAdmin() {
             <View style={styles.header}>
                 <Icon style={{ alignSelf: "flex-start", paddingTop: 10 }} name="person-circle" size={50} color="white" />
                 <Text style={styles.sidebarHeaderText}>Hotel Admin Panel</Text>
-                <Text style={styles.headerText}>Welcome, {username}</Text>
+                <Text style={styles.headerText}>{username}</Text>
                 <TouchableOpacity
                     style={styles.notificationIcon}
                     onPress={() => {
@@ -530,7 +530,7 @@ function HotelAdmin() {
                     onPress={() => handleTabSelect("Edit Details")}
                 >
                     <Text style={[styles.menuText, selectedTab === "Edit Details" && styles.selectedMenuText]}>
-                        Edit Details
+                        Edit Hotel Details
                     </Text>
                 </TouchableOpacity>
 
